@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kwakkie de Eend</title>
+<meta name="theme-color" content="#D6EEFF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: een scherm op de telefoon. Boven een spraakwolk, in het midden een grote stuiterende eend met energiebalk, onderaan grote knoppen voor kleuters. */
+:root{
+  --bg:#D6EEFF; --card:#FFFFFF; --ink:#1B2760; --muted:#44527F; --line:#AFCFEA;
+  --duck:#FFC932; --blue:#2F5FE8; --pink:#D81B5E; --green:#0E8A5C; --purple:#7A3FD1; --orange:#D2520A; --teal:#0A7F8F;
+  --display:'Baloo 2','Trebuchet MS','Arial Rounded MT Bold',system-ui,sans-serif;
+  --body:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#101840; --card:#1B2663; --ink:#F2F5FF; --muted:#B5C0F0; --line:#34428F; color-scheme:dark }
+}
+:root[data-theme="dark"]{ --bg:#101840; --card:#1B2663; --ink:#F2F5FF; --muted:#B5C0F0; --line:#34428F; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-weight:600;font-size:18px;line-height:1.4;
+  padding-block:8px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent}
+.app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:12px;min-width:0}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font:800 28px/1 var(--display);margin:0;letter-spacing:.5px}
+.mini{font:800 14px var(--body);border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 14px;cursor:pointer;min-height:36px}
+
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bubble{position:relative;background:var(--card);border:3px solid var(--ink);border-radius:24px;padding:12px 16px;font:800 21px/1.25 var(--display);text-align:center;min-height:76px;width:100%;display:flex;align-items:center;justify-content:center;text-wrap:balance;overflow-wrap:anywhere}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-14px;width:22px;height:22px;background:var(--card);border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
+.duckwrap{width:min(58vw,230px);margin-top:16px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;transform-origin:50% 100%;animation:bounce var(--bounce,.6s) ease-in-out infinite alternate}
+.duckwrap svg{display:block;width:100%;height:auto;overflow:visible}
+@keyframes bounce{from{transform:translateY(0) scale(1.02,.97)}to{transform:translateY(-16px) scale(.98,1.03)}}
+@keyframes breathe{from{transform:scale(1,1)}to{transform:scale(1.025,.985)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}20%{transform:rotate(-9deg)}50%{transform:rotate(8deg)}80%{transform:rotate(-5deg)}}
+@keyframes dance{from{transform:rotate(-8deg) translateY(0)}to{transform:rotate(8deg) translateY(-22px)}}
+.sleeping .duckwrap{animation:breathe 3.2s ease-in-out infinite alternate}
+.wiggle .duckwrap{animation:wiggle .5s ease-in-out}
+.dance .duckwrap{animation:dance .45s ease-in-out infinite alternate}
+
+#duck .eyes-closed{display:none}
+.sleeping #duck .eyes-open{display:none}
+.sleeping #duck .eyes-closed{display:inline}
+#duck .eyes-open{transform-box:fill-box;transform-origin:center;animation:blink 4s infinite}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.talking #duck .billlow{animation:chomp .22s ease-in-out infinite alternate}
+@keyframes chomp{to{transform:translateY(9px)}}
+#duck .wing{transform-box:fill-box;animation:flap calc(var(--bounce,.6s) / 2) ease-in-out infinite alternate}
+#duck .wl{transform-origin:100% 0;--r:16deg}
+#duck .wr{transform-origin:0 0;--r:-16deg}
+@keyframes flap{to{transform:rotate(var(--r))}}
+.sleeping #duck .wing{animation:none}
+#duck .wakering{display:none}
+.sleeping #duck .wakering{display:block;transform-box:fill-box;transform-origin:center;animation:pulse 1.1s ease-in-out infinite alternate}
+@keyframes pulse{from{transform:scale(.92);opacity:.5}to{transform:scale(1.14);opacity:1}}
+.zs{position:absolute;right:8%;top:34%;display:none;pointer-events:none}
+.sleeping .zs{display:block}
+.zs span{position:absolute;font:800 30px var(--display);color:var(--ink);opacity:0;animation:zup 2.4s ease-in infinite}
+.zs span:nth-child(2){animation-delay:.8s;font-size:38px}
+.zs span:nth-child(3){animation-delay:1.6s;font-size:46px}
+@keyframes zup{0%{opacity:0;transform:translate(0,0)}20%{opacity:1}100%{opacity:0;transform:translate(28px,-64px)}}
+
+.meterrow{display:flex;align-items:center;gap:10px;font:800 15px var(--body);width:100%}
+.meter{flex:1;height:18px;border-radius:999px;background:var(--card);border:3px solid var(--ink);overflow:hidden}
+#fill{height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--duck));border-radius:999px;transition:width .6s}
+.low #fill{background:var(--orange)}
+
+.panel{background:var(--card);border:3px solid var(--line);border-radius:24px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h2{font:800 21px/1.2 var(--display);margin:0;text-align:center;text-wrap:balance}
+.panel p{margin:0;text-align:center;color:var(--muted);font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.big{appearance:none;border:0;border-radius:20px;padding:12px 8px;min-height:84px;color:#fff;font:800 20px/1.1 var(--display);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.28);text-align:center;transition:transform .08s;min-width:0;overflow-wrap:anywhere}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.28)}
+.big:disabled{opacity:.55}
+.big .ico{font-size:34px;line-height:1}
+.big.wide{grid-column:1/-1}
+.grid3 .big{font-size:18px}
+.c-pink{background:var(--pink)} .c-blue{background:var(--blue)} .c-green{background:var(--green)}
+.c-orange{background:var(--orange)} .c-purple{background:var(--purple)} .c-teal{background:var(--teal)}
+.sun{background:var(--duck);color:#1B2760}
+.ghost{background:transparent;color:var(--ink);box-shadow:none;border:3px solid var(--line);min-height:56px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.chip{border:3px solid var(--ink);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 18px;font:800 20px var(--display);min-height:54px;cursor:pointer}
+input[type=text]{width:100%;font:800 24px var(--display);padding:12px 16px;border-radius:18px;border:3px solid var(--ink);background:var(--bg);color:var(--ink)}
+:focus-visible{outline:4px solid var(--blue);outline-offset:3px}
+.big:focus-within{outline:4px solid var(--blue);outline-offset:3px}
+.sr-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.preview{display:block;max-width:100%;max-height:190px;margin:0 auto;border-radius:16px;border:3px solid var(--ink)}
+.swatch{width:84px;height:84px;border-radius:50%;margin:0 auto;border:4px solid var(--ink)}
+.score{font:800 18px var(--display);text-align:center}
+details.parents{font:600 14px/1.45 var(--body);color:var(--muted);padding:0 4px}
+details.parents summary{cursor:pointer;font-weight:800;min-height:32px}
+details.parents p{text-align:left;font-size:14px;margin:6px 0}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+header{flex-wrap:wrap}
+.tools{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+html{background:var(--bg)}
+body{margin:0;min-height:100vh}
+#duck{transition:transform .15s}
+.live{display:block;width:100%;max-height:260px;object-fit:cover;background:#000;border-radius:16px;border:3px solid var(--ink)}
+.mirror{transform:scaleX(-1)}
+.bar{height:16px;border-radius:999px;border:3px solid var(--ink);overflow:hidden;background:var(--bg)}
+.bar i{display:block;height:100%;width:0;background:var(--green);transition:width .25s}
+</style>
+</head>
+<body>
+
+<div class="app sleeping" id="app" style="--bounce:.6s">
+  <header>
+    <h1>Kwakkie</h1>
+    <div class="tools">
+      <button class="mini" id="mute" type="button" aria-pressed="false">Stem: aan</button>
+      <button class="mini" id="mic" type="button" aria-pressed="false">Luisteren: uit</button>
+      <button class="mini" id="mot" type="button" aria-pressed="false">Beweging: uit</button>
+    </div>
+  </header>
+
+  <section class="stage">
+    <div class="bubble" id="bubble" aria-live="polite">Zzz... Kwakkie slaapt. Tik op zijn buik!</div>
+    <div class="duckwrap" id="duckwrap" role="button" tabindex="0" aria-label="Kwakkie de eend. Tik om hem te kietelen of wakker te maken.">
+      <svg id="duck" viewBox="0 0 260 290" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <ellipse cx="130" cy="278" rx="74" ry="8" fill="rgba(0,0,0,.16)"/>
+        <g fill="#FF8A1F"><path d="M88 262c-24 0-38 8-42 18 22 6 44 2 56-8z"/><path d="M172 262c24 0 38 8 42 18-22 6-44 2-56-8z"/></g>
+        <ellipse cx="130" cy="200" rx="80" ry="70" fill="#FFC932"/>
+        <g class="wing wl"><path d="M56 170c-36 18-26 62-8 70 26-8 38-34 36-58z" fill="#F2B21A"/></g>
+        <g class="wing wr"><path d="M204 170c36 18 26 62 8 70-26-8-38-34-36-58z" fill="#F2B21A"/></g>
+        <ellipse cx="130" cy="214" rx="48" ry="44" fill="#FFE393"/>
+        <circle class="wakering" cx="130" cy="214" r="40" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-dasharray="7 9"/>
+        <path d="M130 160l-32-17v34z" fill="#2F5FE8"/><path d="M130 160l32-17v34z" fill="#2F5FE8"/><circle cx="130" cy="160" r="8" fill="#1F45B8"/>
+        <circle cx="130" cy="92" r="64" fill="#FFC932"/>
+        <g fill="none" stroke="#E5A412" stroke-width="7" stroke-linecap="round"><path d="M120 34c-8-16 6-24 14-18"/><path d="M134 32c2-18 18-18 22-8"/><path d="M128 38c10-12 24-8 24 2"/></g>
+        <circle cx="76" cy="108" r="10" fill="#FF7EA8" opacity=".55"/><circle cx="184" cy="108" r="10" fill="#FF7EA8" opacity=".55"/>
+        <g class="eyes-open"><circle cx="102" cy="82" r="17" fill="#fff"/><circle cx="158" cy="82" r="17" fill="#fff"/><circle cx="106" cy="84" r="9" fill="#1B2760"/><circle cx="154" cy="84" r="9" fill="#1B2760"/><circle cx="109" cy="80" r="3" fill="#fff"/><circle cx="157" cy="80" r="3" fill="#fff"/></g>
+        <g class="eyes-closed" fill="none" stroke="#1B2760" stroke-width="5" stroke-linecap="round"><path d="M86 84q16 14 32 0"/><path d="M142 84q16 14 32 0"/></g>
+        <ellipse cx="130" cy="125" rx="22" ry="6" fill="#7A2B05"/>
+        <g class="billlow"><path d="M104 119c10 20 42 20 52 0z" fill="#E36A0C"/></g>
+        <path d="M92 105c12-13 64-13 76 0 8 10-2 22-14 24-16 4-32 4-48 0-12-2-22-14-14-24z" fill="#FF8A1F"/>
+        <circle cx="120" cy="108" r="2.6" fill="#B44F06"/><circle cx="140" cy="108" r="2.6" fill="#B44F06"/>
+      </svg>
+    </div>
+    <div class="zs" aria-hidden="true"><span>Z</span><span>Z</span><span>Z</span></div>
+    <div class="meterrow"><span>Energie</span><div class="meter" id="meter" role="progressbar" aria-label="Energie van Kwakkie" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="fill"></div></div></div>
+  </section>
+
+  <section class="panel" id="panel"></section>
+
+  <details class="parents">
+    <summary>Voor ouders</summary>
+    <p>Kwakkie praat met een hoog stemmetje via de Nederlandse spraakfunctie van je toestel. Naam en lievelingsdingen blijven alleen op dit toestel staan.</p>
+    <p>Camera: de beelden worden op het toestel zelf bekeken en niet opgeslagen of verstuurd. Alleen het herkenmodel voor het spel Wat zie ik? wordt eenmalig gedownload.</p>
+    <p>Luisteren: Chrome en Safari sturen de opname voor spraakherkenning naar de leverancier van de browser (Google of Apple). Zet Luisteren uit als je dat niet wilt; alles werkt dan ook met tikken.</p>
+    <button class="mini" id="reset" type="button">Wis gegevens van dit kind</button>
+  </details>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const app=$('#app'), bubbleEl=$('#bubble'), panel=$('#panel'), fillEl=$('#fill'), meter=$('#meter'), duckwrap=$('#duckwrap'), muteBtn=$('#mute'), micBtn=$('#mic'), motBtn=$('#mot');
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function h(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+function setPanel(){panel.replaceChildren.apply(panel,arguments);}
+function btn(cls,ico,label,fn){const b=h('button','big '+cls);b.type='button';if(ico)b.appendChild(h('span','ico',ico));b.appendChild(h('span','',label));b.addEventListener('click',fn);return b;}
+
+/* ---------- gegevens van het kind (alleen in deze browser) ---------- */
+let S={name:'',color:'',animal:'',food:'',age:''};
+try{const j=JSON.parse(localStorage.getItem('kwakkie-kind')||'null');if(j&&typeof j==='object'){for(const k in S){S[k]=String(j[k]||'').slice(0,20);}}}catch(e){}
+function save(){try{localStorage.setItem('kwakkie-kind',JSON.stringify(S));}catch(e){}}
+function fill(s){return s.replace(/\{naam\}/g,S.name||'vriendje').replace(/\{kleur\}/g,S.color||'blauw').replace(/\{dier\}/g,S.animal||'eend').replace(/\{eten\}/g,S.food||'brood').replace(/\{leeftijd\}/g,S.age||'vier');}
+
+/* ---------- toestand ---------- */
+let nameSubmit=null;
+let mode='sleep', started=false, energy=100, run=0, busy=false, snoreT=null, lastLow=false, muted=false, tickleAt=0, view='start';
+
+/* ---------- geluiden (Web Audio) ---------- */
+let ac=null;
+function A(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(ac&&ac.state==='suspended'){try{ac.resume();}catch(e){}}return ac;}
+function tone(o){const c=A();if(!c)return;const t=c.currentTime+(o.at||0);const osc=c.createOscillator();const g=c.createGain();osc.type=o.type||'sine';osc.frequency.setValueAtTime(o.f0,t);if(o.f1)osc.frequency.exponentialRampToValueAtTime(o.f1,t+o.dur);
+  if(o.vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=o.vib;lg.gain.value=o.vibDepth||30;l.connect(lg);lg.connect(osc.frequency);l.start(t);l.stop(t+o.dur+0.05);}
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(o.vol||0.25,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+o.dur);
+  if(o.filter){const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=o.filter;f.Q.value=o.q||3;osc.connect(f);f.connect(g);}else{osc.connect(g);}
+  g.connect(c.destination);osc.start(t);osc.stop(t+o.dur+0.05);}
+function noise(o){const c=A();if(!c)return;const t=c.currentTime+(o.at||0);const len=Math.floor(c.sampleRate*o.dur);const b=c.createBuffer(1,len,c.sampleRate);const d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+  const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(o.f0,t);f.frequency.exponentialRampToValueAtTime(o.f1||o.f0,t+o.dur);
+  const g=c.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(o.vol||0.3,t+o.dur*0.3);g.gain.exponentialRampToValueAtTime(0.0001,t+o.dur);
+  s.connect(f);f.connect(g);g.connect(c.destination);s.start(t);}
+const SFX={
+  kwak(){tone({type:'sawtooth',f0:720,f1:380,dur:.2,vol:.22,filter:1200,q:3});tone({type:'sawtooth',f0:680,f1:330,dur:.22,vol:.22,filter:1100,q:3,at:.26});},
+  boing(){tone({type:'sine',f0:180,f1:650,dur:.55,vol:.25,vib:16,vibDepth:110});},
+  whoop(){tone({type:'sine',f0:300,f1:1900,dur:.55,vol:.2});},
+  pop(){tone({type:'sine',f0:700,f1:120,dur:.12,vol:.35});},
+  prrt(){noise({f0:900,f1:200,dur:.5,vol:.25});tone({type:'square',f0:95,f1:60,dur:.5,vol:.1,vib:45,vibDepth:20});},
+  giggle(){for(let i=0;i<6;i++)tone({type:'sine',f0:900+Math.random()*300,f1:1300+Math.random()*300,dur:.07,vol:.18,at:i*.1});},
+  tada(){[523,659,784,1046].forEach((f,i)=>tone({type:'triangle',f0:f,f1:f*1.01,dur:.32,vol:.22,at:i*.13}));},
+  hik(){tone({type:'sine',f0:420,f1:900,dur:.09,vol:.25});},
+  yawn(){tone({type:'sine',f0:700,f1:200,dur:1.1,vol:.14,vib:5,vibDepth:25});},
+  snore(){noise({f0:500,f1:120,dur:1,vol:.28});tone({type:'sawtooth',f0:75,f1:55,dur:1,vol:.07,vib:22,vibDepth:8});noise({f0:300,f1:100,dur:.4,vol:.18,at:1.2});},
+  plons(){tone({type:'sine',f0:900,f1:250,dur:.22,vol:.25});tone({type:'sine',f0:700,f1:150,dur:.25,vol:.2,at:.09});},
+  squeak(){tone({type:'sine',f0:1400,f1:2300,dur:.14,vol:.15,vib:28,vibDepth:80});tone({type:'sine',f0:1500,f1:2400,dur:.14,vol:.15,at:.18,vib:28,vibDepth:80});},
+  boem(){tone({type:'sine',f0:140,f1:35,dur:.45,vol:.6});noise({f0:400,f1:80,dur:.3,vol:.3});},
+  tromp(){tone({type:'sawtooth',f0:233,f1:234,dur:.45,vol:.2,filter:800,q:2});tone({type:'sawtooth',f0:311,f1:312,dur:.5,vol:.2,filter:900,q:2,at:.5});},
+  ding(){tone({type:'sine',f0:1760,f1:1750,dur:.5,vol:.2});}
+};
+const DUR={kwak:650,boing:600,whoop:650,pop:250,prrt:600,giggle:700,tada:900,hik:300,yawn:1200,snore:1000,plons:450,squeak:450,boem:500,tromp:1000,ding:500};
+function sfx(n){const f=SFX[n];if(f){try{f();}catch(e){}}}
+
+/* ---------- stem (spraaksynthese, hoog helium-stemmetje) ---------- */
+let voice=null;
+function pickVoice(){try{voice=speechSynthesis.getVoices().find(v=>/^nl/i.test(v.lang))||null;}catch(e){}}
+if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(e){}}
+function unlockSpeech(){try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}
+function stopSpeech(){try{speechSynthesis.cancel();}catch(e){}}
+function speak(text){return new Promise(res=>{let done=false,held=false;
+  const fin=()=>{if(!done){done=true;if(held)setTimeout(()=>Ear.pop(),400);res();}};
+  const est=Math.max(1100,text.length*75+400);setTimeout(fin,est+3000);
+  try{if(muted||!('speechSynthesis' in window)){setTimeout(fin,est);return;}
+    Ear.push();held=true;
+    const u=new SpeechSynthesisUtterance(text);u.lang='nl-NL';if(voice)u.voice=voice;u.pitch=2;u.rate=1.12;u.onend=fin;u.onerror=fin;speechSynthesis.speak(u);}
+  catch(e){setTimeout(fin,est);}});}
+
+/* ---------- een reeks: zinnen en geluiden achter elkaar ---------- */
+async function seq(items){
+  const my=++run;busy=true;stopSpeech();app.classList.remove('talking');
+  for(const raw of items){
+    if(my!==run)return false;
+    if(typeof raw==='function'){raw();continue;}
+    if(raw.charAt(0)==='@'){const n=raw.slice(1);sfx(n);await wait(DUR[n]||700);continue;}
+    if(raw.charAt(0)==='~'){bubbleEl.textContent=raw.slice(1);await wait(900);continue;}
+    const t=fill(raw);bubbleEl.textContent=t;app.classList.add('talking');await speak(t);app.classList.remove('talking');await wait(150);
+  }
+  if(my===run){busy=false;app.classList.remove('talking');return true;}
+  return false;
+}
+function cancel(){run++;busy=false;stopSpeech();app.classList.remove('talking');}
+function wiggle(){app.classList.add('wiggle');setTimeout(()=>app.classList.remove('wiggle'),520);}
+function party(){app.classList.add('dance');setTimeout(()=>app.classList.remove('dance'),3200);}
+
+/* ---------- energie van een kleuter ---------- */
+function setEnergy(v){
+  energy=Math.max(0,Math.min(100,v));
+  fillEl.style.width=energy+'%';meter.setAttribute('aria-valuenow',String(Math.round(energy)));
+  app.classList.toggle('low',energy<30);
+  app.style.setProperty('--bounce',(0.45+(100-energy)/100*1.2).toFixed(2)+'s');
+  if(mode==='awake'){
+    if(energy<=0){sleep();}
+    else if(energy<25&&!lastLow){lastLow=true;if(!busy)seq(["Oeoe... mijn ogen worden zwaar...","@yawn"]);}
+    else if(energy>=25){lastLow=false;}
+  }
+}
+setInterval(()=>{if(mode==='awake'&&started&&view!=='onboard')setEnergy(energy-0.8);},1500);
+
+/* ---------- slapen en wakker worden ---------- */
+function stopSnore(){if(snoreT){clearInterval(snoreT);snoreT=null;}}
+function startSnore(){stopSnore();sfx('snore');bubbleEl.textContent='Zzzz... zzzz... zzzz...';snoreT=setInterval(()=>sfx('snore'),2800);}
+function wakePanel(){
+  view='sleep';
+  setPanel(h('h2','','Kwakkie slaapt'),btn('sun','🔔','Maak Kwakkie wakker!',()=>{A();wake();}),h('p','',"Roep: Hé Kwakkie! En tik op zijn dikke buik."));
+}
+async function sleep(){
+  if(mode!=='awake')return;
+  mode='sleep';closeCam();wakePanel();
+  const ok=await seq(["Ik ben... zo... moe... {naam}...","@yawn",()=>app.classList.add('sleeping'),"~Zzzzz..."]);
+  if(ok&&mode==='sleep')startSnore();
+}
+async function wake(){
+  if(mode!=='sleep'||!started)return;
+  mode='awake';stopSnore();app.classList.remove('sleeping');lastLow=false;wiggle();setEnergy(100);
+  showMenu();
+  await seq(["@kwak","Kwaaaak! Hé {naam}! Ik ben wakker!","@boing","Hoeraaa! Ik zit weer vol energie!","@whoop","Wat gaan we doen?"]);
+}
+function firstStart(){
+  started=true;mode='awake';app.classList.remove('sleeping');lastLow=false;setEnergy(100);wiggle();
+  if(S.name){showMenu();seq(["@kwak","Hoi {naam}! Ik heb je zo gemist!","@boing","Wat gaan we doen?"]);}
+  else{onboarding();}
+}
+function tickle(){
+  const now=Date.now();if(now-tickleAt<380)return;tickleAt=now;wiggle();sfx(pick(['giggle','squeak','boing','kwak']));
+  if(!busy)bubbleEl.textContent=pick(["Hihihi! Dat kriebelt!","Hihi! Nog een keer!","Kwak! Dat is mijn kietelplekje!","Hi hi hi, stop, haha!"]);
+  setEnergy(energy-1);
+}
+function duckTap(){A();unlockSpeech();if(!started){motionOn();micOn();}
+  if(mode==='sleep'){if(!started)firstStart();else wake();return;}
+  if(mode==='awake')tickle();}
+duckwrap.addEventListener('pointerdown',duckTap);
+duckwrap.addEventListener('pointermove',e=>{if(e.buttons&&mode==='awake')tickle();});
+duckwrap.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();duckTap();}});
+
+/* ---------- kennismaken ---------- */
+const COL={rood:'#E5322D',blauw:'#2F6BFF',groen:'#1EA85A',geel:'#FFC932',roze:'#E0449A',paars:'#7A3FD1'};
+const EMO={hond:'🐶',kat:'🐱',paard:'🐴',dinosaurus:'🦖',konijn:'🐰',olifant:'🐘',pannenkoek:'🥞',patat:'🍟',appel:'🍎',ijs:'🍦',pasta:'🍝',banaan:'🍌'};
+const QA=[
+  {key:'color',say:"Wat is jouw lievelingskleur?",opts:['rood','blauw','groen','geel','roze','paars'],react:["@pop","{kleur}! Wauw, dat is een superduper mooie kleur!"]},
+  {key:'animal',say:"Welk dier vind jij het allerleukst?",opts:['hond','kat','paard','dinosaurus','konijn','olifant'],react:["@pop","Een {dier}! Ik vind een {dier} ook zo grappig! Kwak kwak {dier}!"]},
+  {key:'food',say:"Wat eet jij het allerliefst?",opts:['pannenkoek','patat','appel','ijs','pasta','banaan'],react:["@plons","Mmm, {eten}! Ik vind {eten} ook lekker, behalve met zand erin!"]},
+  {key:'age',say:"Hoe oud ben jij?",opts:['3','4','5','6','7','8'],react:["@tada","Wauw, {leeftijd} jaar! Dat is bijna net zo oud als ik. Ik ben zes eendenjaren!"]}
+];
+async function onboarding(){
+  view='onboard';setPanel(h('h2','','Kwakkie is wakker!'));
+  const ok=await seq(["@kwak","Kwaak kwaak! Hoi hoi hoi!","@boing","Ik ben Kwakkie de eend!","Hoe heet jij?"]);
+  if(ok)showName();
+}
+function showName(){
+  view='onboard';
+  const inp=h('input');inp.type='text';inp.id='naam';inp.maxLength=20;inp.autocomplete='off';inp.placeholder='Typ je naam';inp.setAttribute('aria-label','Jouw naam');
+  function submit(){
+    const n=inp.value.replace(/[<>{}\[\]]/g,'').trim().slice(0,20);
+    if(!n){seq(["Ik hoor niks! Hoe heet jij?"]);inp.focus();return;}
+    S.name=n;save();
+    seq(["@pop","Hoi {naam}! Wat een mooie naam!","@giggle","{naam}, {naam}, {naam}! Ik ga je naam de hele dag zeggen!"]).then(ok=>{if(ok)askQ(0);});
+  }
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});nameSubmit=submit;
+  setPanel(h('h2','','Hoe heet jij?'),inp,btn('c-green','👍','Klaar!',submit));
+}
+function askQ(i){
+  view='onboard';
+  if(i>=QA.length){explainWake(true);return;}
+  const q=QA[i];const chips=h('div','chips');
+  q.opts.forEach(o=>{
+    const b=h('button','chip',(EMO[o]?EMO[o]+' ':'')+o);b.type='button';
+    if(q.key==='color'){b.style.background=COL[o];b.style.borderColor=COL[o];b.style.color=(o==='geel')?'#1B2760':'#fff';}
+    b.addEventListener('click',()=>{S[q.key]=o;save();seq(q.react).then(ok=>{if(ok)askQ(i+1);});});
+    chips.appendChild(b);
+  });
+  const skip=h('button','mini','Overslaan');skip.type='button';skip.addEventListener('click',()=>askQ(i+1));
+  setPanel(h('h2','',q.say),chips,skip);
+  seq([q.say]);
+}
+
+/* ---------- wekteken ---------- */
+async function explainWake(first){
+  view=first?'onboard':'wake';
+  const practice=btn('c-orange','😴','Oefenen: Kwakkie gaat slapen',()=>{
+    seq(["Goed! Kijk goed naar mij.","@yawn","Ik ga slapen. Roep daarna: Hé Kwakkie!"]).then(ok=>{if(ok)setEnergy(0);});});
+  const back=btn('ghost','','Terug naar het menu',()=>{cancel();showMenu();});
+  setPanel(h('h2','','Het wekteken van Kwakkie'),h('p','',"Als Kwakkie snurkt, roep je: Hé Kwakkie! En je tikt op zijn buik."),practice,back);
+  const ok=await seq(["Nu ga ik je iets geheims vertellen, {naam}.","@pop","Ik heb een wekteken!","Als ik heel erg moe ben, dan snurk ik. Zzzzz. Dan val ik in slaap.","Dan moet jij mij wakker maken.","Roep heel hard: Hé Kwakkie! En tik op mijn dikke buik.","@kwak","Dan ben ik meteen weer wakker!","Ik ben net een kleuter. Rennen, springen, lachen, en plof! Dan slaap ik ineens.","@giggle"]);
+  if(ok&&first){showMenu();seq(["Waar hebben we zin in?"]);}
+}
+
+/* ---------- menu ---------- */
+function showMenu(){
+  closeCam();view='menu';
+  setPanel(h('h2','','Wat gaan we doen?'),(function(){
+    const g=h('div','grid');
+    g.appendChild(btn('c-pink','😂','Moppen',jokes));
+    g.appendChild(btn('c-blue','🧩','Raadsels',riddles));
+    g.appendChild(btn('c-green','📷','Foto-spel',photoMenu));
+    g.appendChild(btn('c-orange','🎨','Kwakkie zegt',simon));
+    g.appendChild(btn('c-purple','🦆','Over mij',about));
+    g.appendChild(btn('sun','🎉','Verrassing!',surprise));
+    const w=btn('c-teal','⏰','Wekteken',()=>explainWake(false));w.classList.add('wide');g.appendChild(w);
+    return g;
+  })());
+}
+function backBtn(){return btn('ghost','','Terug naar het menu',()=>{cancel();showMenu();});}
+
+/* ---------- moppen ---------- */
+const JOKES=[
+  ["Wat is groen en springt van berg naar berg?","Een bergkikker!"],
+  ["Waarom heeft een koe een bel?","Omdat haar hoorn het niet doet!"],
+  ["Wat is geel en kan niet zwemmen?","Een bus vol bananen!"],
+  ["Waarom ging de banaan naar de dokter?","Hij voelde zich niet lekker in zijn vel!"],
+  ["Wat zegt de nul tegen de acht?","Mooie riem!"],
+  ["Hoe noem je een eend in een witte jas?","Een kwakzalver!"],
+  ["Wat is zwart en wit en kriebelt?","Een zebra met een veertje!"],
+  ["Waarom kan een spook zo slecht liegen?","Je kunt zo door hem heen kijken!"],
+  ["Wat is groter dan een olifant, maar weegt niets?","Zijn schaduw!"],
+  ["Waarom zat de olifant op de marshmallow?","Dan viel hij niet in de warme chocolademelk!"]
+];
+let jq=shuffle(JOKES.map((_,i)=>i)),jp=0;
+function jokes(){
+  view='jokes';setEnergy(energy-4);
+  if(jp>=jq.length){jq=shuffle(JOKES.map((_,i)=>i));jp=0;}
+  const pair=JOKES[jq[jp++]];const q=pair[0],a=pair[1];
+  const title=h('h2','',q);
+  const reveal=btn('c-pink','🥁','Wat is het antwoord?',async()=>{
+    reveal.disabled=true;
+    const ok=await seq(["Het antwoord is...","@pop",a,"@giggle","Hihihi! Haha! Die is goed hè, {naam}?"]);
+    if(ok){title.textContent=q+' '+a;setPanel(title,btn('c-pink','😂','Nog een mop!',jokes),backBtn());}
+  });
+  setPanel(title,reveal,backBtn());
+  seq(["Hé {naam}, ik heb een mop voor je!",q,"Weet jij het?"]);
+}
+
+/* ---------- raadsels ---------- */
+const RID=[
+  {q:"Ik heb vier poten en zeg waf waf. Als je zegt zit, dan zit ik! Wat ben ik?",o:[['hond','🐶'],['kat','🐱'],['vis','🐟']],a:0},
+  {q:"Ik ben geel en krom, en apen eten mij graag. Wat ben ik?",o:[['banaan','🍌'],['appel','🍎'],['peer','🍐']],a:0},
+  {q:"Ik ben rond en ik zweef. Als je mij prikt, zeg ik pop! Wat ben ik?",o:[['steen','🪨'],['ballon','🎈'],['bord','🍽️']],a:1},
+  {q:"Ik heb een hele lange nek en ik eet hoge bladeren. Wat ben ik?",o:[['muis','🐭'],['pinguïn','🐧'],['giraf','🦒']],a:2},
+  {q:"Als het regent, hou jij mij boven je hoofd en dan blijf je droog. Wat ben ik?",o:[['paraplu','☂️'],['schoen','👟'],['boterham','🍞']],a:0},
+  {q:"Ik heb twee wielen en jij trapt op mijn pedalen. Wat ben ik?",o:[['boot','⛵'],['taart','🎂'],['fiets','🚲']],a:2},
+  {q:"Ik zeg kwak kwak en ik zwem in de vijver. Wat ben ik?",o:[['koe','🐮'],['eend','🦆'],['slang','🐍']],a:1},
+  {q:"Ik ben koud en zoet en ik smelt in je hand. Wat ben ik?",o:[['ijsje','🍦'],['brood','🍞'],['sok','🧦']],a:0}
+];
+let rq=shuffle(RID.map((_,i)=>i)),rp=0;
+function riddles(){
+  view='riddles';setEnergy(energy-4);
+  if(rp>=rq.length){rq=shuffle(RID.map((_,i)=>i));rp=0;}
+  const r=RID[rq[rp++]];
+  const g=h('div','grid3');
+  r.o.forEach((o,i)=>{
+    const b=btn('c-blue',o[1],o[0],()=>{
+      if(i===r.a){
+        g.querySelectorAll('button').forEach(x=>{x.disabled=true;});
+        seq(["@tada","Ja! Het is "+(o[0]==='ijsje'?'een ijsje':'een '+o[0])+"! {naam}, wat ben jij slim!"]).then(ok=>{
+          if(ok){party();setPanel(h('h2','','Goed zo, {naam}!'.replace('{naam}',S.name||'vriendje')),btn('c-blue','🧩','Nog een raadsel!',riddles),backBtn());}});
+      }else{seq(["@boing","Oeps! Bijna! Probeer nog eens!"]);}
+    });g.appendChild(b);
+  });
+  setPanel(h('h2','',r.q),g,backBtn());
+  seq(["Raad eens, {naam}!",r.q]);
+}
+
+/* ---------- Kwakkie zegt ---------- */
+const GC=['rood','blauw','groen','geel'];
+function simon(){
+  view='simon';let score=0,target=null;const GOAL=5;
+  const status=h('h2','','Kwakkie zegt...');const sc=h('div','score','');const g=h('div','grid');
+  function updScore(){sc.textContent='Goed: '+score+' van '+GOAL;}
+  GC.forEach(c=>{const b=h('button','big');b.type='button';b.style.background=COL[c];b.style.color=(c==='geel')?'#1B2760':'#fff';b.appendChild(h('span','',c));
+    b.addEventListener('click',()=>choose(c));g.appendChild(b);});
+  function newRound(){target=pick(GC);status.textContent='Kwakkie zegt: tik op '+target+'!';seq(['Kwakkie zegt: tik op '+target+'!']);}
+  async function choose(c){
+    if(!target)return;
+    if(c===target){
+      score++;target=null;updScore();setEnergy(energy-2);
+      if(score>=GOAL){party();const ok=await seq(["@tada","Hoera, {naam}! Je hebt alles goed! Jij bent de baas van de kleuren!"]);if(ok)showMenu();}
+      else{const ok=await seq([pick(['@pop','@whoop']),pick(['Goed zo!','Super!','Joepie!'])]);if(ok)newRound();}
+    }else{seq(['@boing','Oeps! Dat is '+c+'. Probeer '+target+'!']);}
+  }
+  updScore();setPanel(status,g,sc,backBtn());
+  seq(["Kwakkie zegt! Tik op de goede kleur, {naam}!"]).then(ok=>{if(ok)newRound();});
+}
+
+/* ---------- camera-spellen (live camera, alles op het toestel) ---------- */
+let stream=null,camTimer=null,dg=0;
+async function openCam(facing){
+  closeCam();
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('nocam');
+  stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:640},height:{ideal:480}},audio:false});
+  const v=document.createElement('video');v.className='live';v.setAttribute('playsinline','');v.muted=true;v.autoplay=true;v.srcObject=stream;
+  try{await v.play();}catch(e){}
+  return v;
+}
+function closeCam(){if(camTimer){clearInterval(camTimer);camTimer=null;}if(stream){stream.getTracks().forEach(x=>x.stop());stream=null;}dg++;}
+const cv=document.createElement('canvas');const cx=cv.getContext('2d',{willReadFrequently:true});
+function grab(v,w,hh){cv.width=w;cv.height=hh;cx.drawImage(v,0,0,w,hh);return cx.getImageData(0,0,w,hh);}
+function camError(holder){holder.replaceChildren(h('p','','Kwakkie mag niet kijken. Zet de camera aan voor deze pagina.'));seq(["Oeps, ik kan niet kijken!","Zet de camera aan, {naam}!"]);}
+function photoMenu(){
+  view='photo';closeCam();
+  setPanel(h('h2','','Camera-spellen'),h('p','',"Kwakkie kijkt mee door de camera van jouw telefoon. De beelden blijven op je toestel."),
+    btn('c-green','🌈','Kleurenjacht',colorHunt),btn('c-teal','🔎','Wat zie ik?',whatDoISee),btn('c-orange','💃','Dans en bevries',danceGame),backBtn());
+  seq(["Ik wil spelletjes doen met de camera!","@whoop","Kies maar, {naam}!"]);
+}
+function hsv(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let hh=0;
+  if(d){if(mx===r)hh=((g-b)/d)%6;else if(mx===g)hh=(b-r)/d+2;else hh=(r-g)/d+4;hh*=60;if(hh<0)hh+=360;}return [hh,mx?d/mx:0,mx];}
+function colorOf(r,g,b){const a=hsv(r,g,b),hh=a[0],s=a[1],v=a[2];if(s<0.4||v<0.3)return null;
+  if(hh<15||hh>=340)return 'rood';if(hh>=45&&hh<70)return 'geel';if(hh>=85&&hh<165)return 'groen';if(hh>=195&&hh<255)return 'blauw';return null;}
+async function colorHunt(){
+  view='hunt';const gid=(closeCam(),dg);const c=pick(GC);let hit=0,done=false;
+  const sw=h('div','swatch');sw.style.background=COL[c];
+  const bar=h('div','bar');const fb=h('i');bar.appendChild(fb);const holder=h('div','');
+  setPanel(h('h2','','Zoek iets '+c+'!'),sw,holder,bar,btn('c-orange','🔄','Andere kleur',colorHunt),backBtn());
+  seq(["Kleurenjacht! Zoek iets dat "+c+" is!","Houd het in het midden van de camera, {naam}!"]);
+  let v;try{v=await openCam('environment');}catch(e){return camError(holder);}
+  holder.appendChild(v);const my=dg;
+  camTimer=setInterval(()=>{
+    if(my!==dg||mode!=='awake'){closeCam();return;}
+    if(done||!v.videoWidth)return;
+    const d=grab(v,48,36).data;let m=0,n=0;
+    for(let y=9;y<27;y++)for(let x=12;x<36;x++){const i=(y*48+x)*4;n++;if(colorOf(d[i],d[i+1],d[i+2])===c)m++;}
+    const p=m/n;fb.style.width=Math.min(100,p*220)+'%';hit=p>0.4?hit+1:Math.max(0,hit-1);
+    if(hit>=3){done=true;closeCam();setEnergy(energy-6);party();
+      seq(["@tada","Ja! Ik zie "+c+"! Super, {naam}!"]).then(ok=>{if(ok)setPanel(h('h2','','Gevonden!'),sw,btn('c-green','🌈','Nog een kleur!',colorHunt),backBtn());});}
+  },300);
+}
+const NL={person:'een mens',bicycle:'een fiets',car:'een auto',motorcycle:'een motor',airplane:'een vliegtuig',bus:'een bus',train:'een trein',truck:'een vrachtwagen',boat:'een boot',bench:'een bankje',bird:'een vogel',cat:'een kat',dog:'een hond',horse:'een paard',sheep:'een schaap',cow:'een koe',elephant:'een olifant',bear:'een beer',zebra:'een zebra',giraffe:'een giraf',backpack:'een rugzak',umbrella:'een paraplu',handbag:'een tas',tie:'een stropdas',suitcase:'een koffer',kite:'een vlieger','sports ball':'een bal',skateboard:'een skateboard',bottle:'een fles','wine glass':'een glas',cup:'een kopje',fork:'een vork',knife:'een mes',spoon:'een lepel',bowl:'een kom',banana:'een banaan',apple:'een appel',sandwich:'een boterham',orange:'een sinaasappel',pizza:'een pizza',donut:'een donut',cake:'een taart',chair:'een stoel',couch:'een bank','potted plant':'een plant',bed:'een bed','dining table':'een tafel',toilet:'een wc',tv:'een tv',laptop:'een laptop',mouse:'een muis',remote:'een afstandsbediening',keyboard:'een toetsenbord','cell phone':'een telefoon',oven:'een oven',refrigerator:'een koelkast',sink:'een wasbak',book:'een boek',clock:'een klok',vase:'een vaas',scissors:'een schaar','teddy bear':'een knuffelbeer','hair drier':'een föhn',toothbrush:'een tandenborstel'};
+let cocoP=null;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('load'));document.head.appendChild(s);});}
+function loadCoco(){
+  if(!cocoP){cocoP=(async()=>{
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
+    return await cocoSsd.load({base:'lite_mobilenet_v2'});})();
+    cocoP.catch(()=>{cocoP=null;});}
+  return cocoP;
+}
+async function whatDoISee(){
+  view='see';closeCam();const holder=h('div','');const out=h('p','','Mijn kijkbrein wordt wakker...');
+  const look=btn('c-teal','👀','Kijk, Kwakkie!',async()=>{
+    if(!holder.firstChild)return;look.disabled=true;
+    seq(["Hmm hmm hmm... even kijken!"]);
+    let ps=null;
+    try{const m=await loadCoco();const v=holder.firstChild;ps=(await m.detect(v)).filter(p=>p.score>0.45).sort((a,b)=>b.score-a.score);}catch(e){ps=null;}
+    look.disabled=false;if(mode!=='awake'||view!=='see')return;
+    setEnergy(energy-4);
+    if(ps===null){out.textContent='Mijn kijkbrein kan niet starten. Is er internet?';seq(["Oeps, mijn kijkbrein slaapt nog. Probeer het straks nog eens!"]);}
+    else if(!ps.length){out.textContent='Ik zie iets geks!';seq(["@boing","Ik zie iets geks! Probeer iets anders, {naam}!"]);}
+    else{const nm=NL[ps[0].class]||'iets geks';out.textContent='Ik zie '+nm+'!';party();seq(["@pop","Ik zie "+nm+"!","@giggle","Wat goed, {naam}!"]);}
+  });
+  setPanel(h('h2','','Wat zie ik?'),holder,look,out,backBtn());
+  seq(["Wat zie ik? Houd de camera op iets en druk op Kijk!"]);
+  loadCoco().then(()=>{out.textContent='Klaar om te kijken!';}).catch(()=>{out.textContent='Mijn kijkbrein kan niet starten. Is er internet?';});
+  let v;try{v=await openCam('environment');}catch(e){return camError(holder);}
+  holder.appendChild(v);
+}
+async function danceGame(){
+  view='dance';closeCam();const gid=dg;setEnergy(energy-8);
+  const status=h('h2','','Dans en bevries!');const holder=h('div','');const sc=h('div','score','');
+  setPanel(status,holder,sc,backBtn());
+  let v;try{v=await openCam('user');}catch(e){return camError(holder);}
+  const my=dg;v.classList.add('mirror');holder.appendChild(v);
+  const alive=()=>my===dg&&mode==='awake'&&view==='dance';
+  let prev=null,cnt={t:0,m:0};
+  camTimer=setInterval(()=>{if(!v.videoWidth)return;const d=grab(v,32,24).data;const g=new Uint8Array(768);let diff=0;
+    for(let i=0;i<768;i++){g[i]=(d[i*4]+d[i*4+1]+d[i*4+2])/3;if(prev)diff+=Math.abs(g[i]-prev[i]);}
+    if(prev){cnt.t++;if(diff/768>7)cnt.m++;}prev=g;},150);
+  await seq(["Dans en bevries! Als ik zeg Dans, dan dans jij. Als ik zeg Bevries, dan sta jij stil!","Zet de telefoon neer zodat ik je kan zien."]);
+  let score=0,rounds=0;
+  for(let r=0;r<4;r++){
+    for(const ph of ['dans','bevries']){
+      if(!alive())return;
+      status.textContent=ph==='dans'?'Dans!':'Bevries!';cnt={t:0,m:0};
+      seq(ph==='dans'?["@whoop","Dans, {naam}! Beweeg heel veel!"]:["@pop","Bevries! Niet bewegen!"]);
+      await wait(ph==='dans'?6000:4500);
+      if(!alive())return;
+      const frac=cnt.t?cnt.m/cnt.t:0;rounds++;
+      if(ph==='dans'?frac>0.3:frac<0.3)score++;
+      sc.textContent='Goed: '+score+' van '+rounds;
+    }
+  }
+  closeCam();party();
+  seq(["@tada",score>=6?"Wat een danser ben jij, {naam}!":"Leuk gedaan, {naam}! Nog een keer?"]);
+  setPanel(status,sc,btn('c-orange','💃','Nog een keer!',danceGame),backBtn());
+}
+
+/* ---------- over mij ---------- */
+const ABOUT=[
+  ["@kwak","Ik ben Kwakkie! Kwak kwak!","Ik ben zes eendenjaren oud.","@boing","Ik woon in een badkuip met een gouden kraan.","@plons","Mijn lievelingseten is brood met bubbels! Mmm!","@pop","Ik kan achteruit lopen. Kijk maar! Wiebel wiebel!","@whoop","Soms moet ik hikken. Hik!","@hik","Hik! Oeps!","@giggle"],
+  ["Wist je dat ik een geheime superkracht heb?","@pop","Als ik heel hard kwak, gaan alle kikkers in de buurt dansen!","@kwak","@boing","Ik slaap met mijn badeendje als knuffel. Maar sst, niet verder vertellen!","@yawn","En als ik slaap, snurk ik zo hard als een tractor. Brrrrm zzzz!","@snore","Ha ha ha!","@giggle"]
+];
+let ap=0;
+function about(){
+  view='about';setEnergy(energy-3);
+  setPanel(h('h2','','Over Kwakkie'),btn('c-purple','🦆','Nog een verhaal!',about),backBtn());
+  seq(ABOUT[ap++%ABOUT.length]);
+}
+
+/* ---------- verrassing ---------- */
+const SURP=[['prrt','Oeps! Dat was mijn stoel!'],['boing','BOINGGG!'],['squeak','Piep! Wie was dat?'],['boem','BOEM! Ik schrok zelf!'],['whoop','Wheeeee!'],['plons','Plons! Ik val in het water!'],['hik','Hik! Hik! Hik!'],['tromp','Taratataaa!'],['giggle','Hihihi! Ik moet lachen!'],['ding','Ding dong! Wie is daar?']];
+function surprise(){
+  view='surprise';
+  const go=btn('sun','🎉','Druk op mij!',()=>{setEnergy(energy-2);const s=pick(SURP);wiggle();go.querySelector('span:last-child').textContent='Nog een!';seq(['@'+s[0],s[1]]);});
+  setPanel(h('h2','','Verrassing!'),go,backBtn());
+  seq(["Pas op, {naam}! Ik heb een verrassing!","@pop"]);
+}
+setInterval(()=>{
+  if(mode==='awake'&&started&&!busy&&view==='menu'&&Math.random()<0.45){
+    const s=pick(SURP);wiggle();seq(['@'+s[0],s[1]]).then(ok=>{if(ok&&view==='menu')bubbleEl.textContent='Wat gaan we doen?';});
+  }
+},11000);
+
+/* ---------- luisteren (spraakherkenning) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const Ear={ok:!!SR,rec:null,want:false,holds:0,running:false,denied:false,
+  push(){this.holds++;if(this.rec&&this.running){try{this.rec.abort();}catch(e){}}},
+  pop(){this.holds=Math.max(0,this.holds-1);this.kick();},
+  kick(){if(!this.ok||!this.want||this.holds>0||this.running||this.denied||document.hidden)return;if(!this.rec)this.rec=this.make();try{this.rec.start();}catch(e){}},
+  make(){const r=new SR();r.lang='nl-NL';r.continuous=true;r.interimResults=false;r.maxAlternatives=3;
+    r.onstart=()=>{this.running=true;};
+    r.onend=()=>{this.running=false;if(this.want&&this.holds===0)setTimeout(()=>this.kick(),300);};
+    r.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){this.denied=true;this.want=false;updateMic();}};
+    r.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal){const alts=[];for(let j=0;j<e.results[i].length;j++)alts.push(e.results[i][j].transcript.toLowerCase().trim());onHear(alts);}}};
+    return r;}
+};
+function micOn(){if(Ear.ok&&!Ear.denied){Ear.want=true;Ear.kick();}updateMic();}
+function micOff(){Ear.want=false;try{if(Ear.rec&&Ear.running)Ear.rec.stop();}catch(e){}updateMic();}
+function updateMic(){micBtn.textContent=!Ear.ok?'Luisteren: niet beschikbaar':Ear.denied?'Luisteren: geblokkeerd':'Luisteren: '+(Ear.want?'aan':'uit');micBtn.setAttribute('aria-pressed',String(Ear.want&&!Ear.denied));}
+const ALIAS={'moppen':['mop'],'raadsels':['raadsel'],'foto-spel':['foto','camera'],'kwakkie zegt':['zegt'],'over mij':['over mij','over jou','vertel'],'verrassing!':['verrassing'],'wekteken':['wekteken'],
+  'terug naar het menu':['terug','menu'],'klaar!':['klaar'],'overslaan':['overslaan'],'nog een mop!':['nog een'],'nog een raadsel!':['nog een'],'nog een verhaal!':['nog een'],'nog een!':['nog een'],'nog een keer!':['nog een'],'nog een kleur!':['nog een'],
+  'wat is het antwoord?':['antwoord','verklap','weet niet'],'kleurenjacht':['kleur','jacht'],'wat zie ik?':['wat zie ik','zie ik'],'dans en bevries':['dans','bevries'],'oefenen: kwakkie gaat slapen':['oefen'],'druk op mij!':['druk'],
+  'andere kleur':['andere'],'kijk kwakkie!':['kijk'],
+  '3':['3','drie'],'4':['4','vier'],'5':['5','vijf'],'6':['6','zes'],'7':['7','zeven'],'8':['8','acht']};
+function voiceClick(alts){
+  const bs=Array.from(panel.querySelectorAll('button')).filter(b=>!b.disabled&&b.offsetParent);
+  let best=null,bl=0;
+  for(const b of bs){
+    const L=(b.textContent||'').toLowerCase().replace(/[^a-zà-ÿ0-9!?: -]/g,'').replace(/\s+/g,' ').trim();if(!L)continue;
+    const keys=(ALIAS[L]||[]).concat([L.replace(/[!?:]/g,'')]);
+    for(const k of keys){if(k.length<1)continue;for(const a of alts){
+      const hit=(k.length<=1)?a.split(/\s+/).indexOf(k)>=0:a.indexOf(k)>=0;
+      if(hit&&k.length>bl){best=b;bl=k.length;}}}
+  }
+  if(best){best.click();return true;}return false;
+}
+function onHear(alts){
+  if(mode==='sleep'){if(started&&alts.some(a=>/kwak|wakk|kwek|kwik|quak/.test(a)))wake();return;}
+  if(mode!=='awake')return;
+  const inp=$('#naam');
+  if(view==='onboard'&&inp&&nameSubmit){
+    let n=alts[0].replace(/^(hallo|hoi|hé|hee|ik heet|mijn naam is|ik ben|ik)\s+/g,'').replace(/^(ik heet|mijn naam is|ik ben)\s+/g,'').trim().split(/\s+/).slice(0,2).join(' ');
+    if(n){n=n.charAt(0).toUpperCase()+n.slice(1);inp.value=n.slice(0,20);nameSubmit();}
+    return;
+  }
+  if(voiceClick(alts))return;
+  if(alts.some(a=>/kwak/.test(a))&&!busy&&view==='menu'){wiggle();seq(["@kwak","Kwaak! Ja, ik luister, {naam}!"]);}
+}
+
+/* ---------- beweging voelen (schudden en kantelen) ---------- */
+const Motion={on:false,prev:0,last:0,cool:0};
+async function motionOn(){
+  if(Motion.on||!('DeviceMotionEvent' in window)){updateMot();return;}
+  try{
+    if(typeof DeviceMotionEvent.requestPermission==='function'){const r=await DeviceMotionEvent.requestPermission();if(r!=='granted'){updateMot();return;}}
+    window.addEventListener('devicemotion',onMotion);window.addEventListener('deviceorientation',onTilt);Motion.on=true;
+  }catch(e){}
+  updateMot();
+}
+function motionOff(){window.removeEventListener('devicemotion',onMotion);window.removeEventListener('deviceorientation',onTilt);Motion.on=false;$('#duck').style.transform='';updateMot();}
+function updateMot(){motBtn.textContent='Beweging: '+(Motion.on?'aan':('DeviceMotionEvent' in window?'uit':'niet beschikbaar'));motBtn.setAttribute('aria-pressed',String(Motion.on));}
+function onMotion(e){
+  const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
+  const m=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);const d=Math.abs(m-Motion.prev);Motion.prev=m;
+  const now=Date.now();if(d>14&&now-Motion.last>1500){Motion.last=now;onShake();}
+}
+function onShake(){
+  if(mode==='sleep'&&started){wake();return;}
+  if(mode==='awake'){wiggle();sfx(pick(['boing','giggle','whoop']));
+    if(!busy)bubbleEl.textContent=pick(["Wheee! Alles schudt!","Brrr! Ik word door elkaar geschud!","Help, een aardbeving! Hihi!"]);setEnergy(energy-2);}
+}
+function onTilt(e){
+  const g=e.gamma,b=e.beta;if(g==null)return;
+  $('#duck').style.transform='rotate('+Math.max(-20,Math.min(20,g/3)).toFixed(1)+'deg)';
+  const now=Date.now();
+  if(mode==='awake'&&!busy&&now-Motion.cool>8000){
+    if(Math.abs(b)>140){Motion.cool=now;seq(["Hé! Alles staat op zijn kop!","@whoop","Ik word er duizelig van!"]);}
+    else if(Math.abs(g)>60){Motion.cool=now;seq(["@whoop","Wheee! Ik glijd!"]);}
+  }
+}
+
+/* ---------- knoppen, ouders en start ---------- */
+muteBtn.addEventListener('click',()=>{muted=!muted;muteBtn.textContent='Stem: '+(muted?'uit':'aan');muteBtn.setAttribute('aria-pressed',String(muted));if(muted)stopSpeech();});
+micBtn.addEventListener('click',()=>{if(Ear.want)micOff();else{Ear.denied=false;micOn();}});
+motBtn.addEventListener('click',()=>{if(Motion.on)motionOff();else motionOn();});
+$('#reset').addEventListener('click',()=>{
+  cancel();stopSnore();closeCam();S={name:'',color:'',animal:'',food:'',age:''};save();
+  started=false;mode='sleep';app.classList.add('sleeping');setEnergy(100);startPanel();
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){stopSpeech();stopSnore();closeCam();try{if(Ear.rec&&Ear.running)Ear.rec.abort();}catch(e){}}
+  else{Ear.kick();if(mode==='sleep'&&started&&app.classList.contains('sleeping')&&!busy)startSnore();}
+});
+function startPanel(){
+  view='start';bubbleEl.textContent='Zzz... Kwakkie slaapt. Tik op zijn buik!';
+  setPanel(h('h2','','Kwakkie slaapt'),btn('sun','🔔','Maak Kwakkie wakker!',duckTap),h('p','',"Tik op Kwakkie om te beginnen. Zet het geluid van je toestel aan en sta de microfoon en beweging toe."));
+}
+setEnergy(100);updateMic();updateMot();startPanel();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+})();
+</script>
+</body>
+</html>
